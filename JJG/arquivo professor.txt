@@ -1,0 +1,172 @@
+import pygame
+import sys
+import config  # Importa as configurações globais
+
+# Inicializar o Pygame
+pygame.init()
+
+# Configurar a tela
+screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+pygame.display.set_caption(config.titulo)
+
+# Relógio para controle de FPS
+clock = pygame.time.Clock()
+
+def menu_screen():
+    font = pygame.font.Font(config.FONT_PATH, 50)
+    title = font.render("Menu Principal", True, config.Preto)
+    play_button = font.render("Jogar", True, config.Preto)
+    settings_button = font.render("Configurações", True, config.Preto)
+    quit_button = font.render("Sair", True, config.Preto)
+
+    while True:
+        screen.fill(config.Azul_Claro)
+        screen.blit(title, (config.SCREEN_WIDTH // 2 - title.get_width() // 2, 100))
+        screen.blit(play_button, (config.SCREEN_WIDTH // 2 - play_button.get_width() // 2, 200))
+        screen.blit(settings_button, (config.SCREEN_WIDTH // 2 - settings_button.get_width() // 2, 300))
+        screen.blit(quit_button, (config.SCREEN_WIDTH // 2 - quit_button.get_width() // 2, 400))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 200 < y < 250:  # Jogar
+                    return config.STATE_GAME
+                elif 300 < y < 350:  # Configurações
+                    return config.STATE_SETTINGS
+                elif 400 < y < 450:  # Sair
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.flip()
+        clock.tick(config.FPS)
+def settings_screen():
+    font = pygame.font.Font(config.FONT_PATH, 50)
+    title = font.render("Configurações", True, config.Preto)
+    width_label = font.render(f"Largura: {config.SCREEN_WIDTH}", True, config.Preto)
+    height_label = font.render(f"Altura: {config.SCREEN_HEIGHT}", True, config.Preto)
+    change_width_button = font.render("Alterar Largura", True, config.Preto)
+    change_height_button = font.render("Alterar Altura", True, config.Preto)
+    apply_button = font.render("Aplicar Alterações", True, config.Preto)
+    back_button = font.render("Voltar", True, config.Preto)
+
+    temp_width = config.SCREEN_WIDTH
+    temp_height = config.SCREEN_HEIGHT
+
+
+    while True:
+        screen.fill(config.Azul_Claro)
+        screen.blit(title, (config.SCREEN_WIDTH // 2 - title.get_width() // 2, 20))
+        screen.blit(width_label, (100, 150))
+        screen.blit(height_label, (100, 250))
+        screen.blit(change_width_button, (100, 350))
+        screen.blit(change_height_button, (100, 450))
+        screen.blit(apply_button, (100, 550))
+        screen.blit(back_button, (config.SCREEN_WIDTH // 2 - back_button.get_width() // 2, 650))
+
+        for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        x, y = event.pos
+                        if 350 < y < 400:  # Alterar largura
+                            new_width = input_text(screen, 400, 350, 200, 50, font, str(temp_width))
+                            if new_width.isdigit():
+                                temp_width = int(new_width)
+                                width_label = font.render(f"Largura: {temp_width}", True, (255, 255, 255))
+                        elif 450 < y < 500:  # Alterar altura
+                            new_height = input_text(screen, 400, 450, 200, 50, font, str(temp_height))
+                            if new_height.isdigit():
+                                temp_height = int(new_height)
+                                height_label = font.render(f"Altura: {temp_height}", True, (255, 255, 255))
+                        elif 550 < y < 600:  # Aplicar alterações
+                            config.SCREEN_WIDTH = temp_width
+                            config.SCREEN_HEIGHT = temp_height
+                            return config.STATE_MENU
+                        elif 650 < y < 700:  # Voltar sem aplicar
+                            return config.STATE_MENU
+
+        pygame.display.flip()
+        clock.tick(config.FPS)
+
+def game_screen():
+    font = pygame.font.Font(config.FONT_PATH, 30)
+    story = [
+        "Bem-vindo ao RPG de Texto!",
+        "Você está em uma floresta sombria.",
+        "Escolha uma ação:",
+        "1. Procurar por saída",
+        "2. Acender uma fogueira",
+    ]
+
+    while True:
+        screen.fill(config.Azul_Claro)
+        y_offset = 100
+        for line in story:
+            text = font.render(line, True, config.Preto)
+            screen.blit(text, (50, y_offset))
+            y_offset += 40
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:  # Exemplo de escolha
+                    story.append("Você escolheu procurar por saída.")
+                elif event.key == pygame.K_2:
+                    story.append("Você acendeu uma fogueira.")
+
+        pygame.display.flip()
+        clock.tick(config.FPS)
+
+def input_text(screen, x, y, width, height, font, initial_value=""):
+    text = initial_value
+    input_active = True  # Indica se o campo está ativo
+    while input_active:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Pressiona Enter para confirmar
+                    input_active = False
+                elif event.key == pygame.K_BACKSPACE:  # Apaga um caractere
+                    text = text[:-1]
+                else:  # Adiciona texto
+                    if len(text) < 10:
+                        text += event.unicode
+
+        # Renderizar o campo de entrada
+        screen.fill(config.Azul_Claro)  # Fundo da tela
+        pygame.draw.rect(screen, config.Preto, (x, y, width, height), 2)
+        rendered_text = font.render(text, True, config.Preto)
+        screen.blit(rendered_text, (x + 5, y + 5))
+
+        pygame.display.flip()
+    return text
+
+
+if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+    pygame.display.set_caption("Jogo Configurável")
+    clock = pygame.time.Clock()
+
+    game_state = config.STATE_MENU
+
+
+    while True:
+        if game_state == config.STATE_MENU:
+            game_state = menu_screen()
+        elif game_state == config.STATE_SETTINGS:
+            game_state = settings_screen()
+            # Atualiza a tela com as novas dimensões
+            screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        elif game_state == config.STATE_GAME:
+            game_screen()
+            game_state = config.STATE_MENU
+
